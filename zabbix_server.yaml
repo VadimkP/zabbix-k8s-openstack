@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: monitoring
+  labels:
+    zabbix-app: zabbix-server
+    state: infra
+  name: zabbix-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      zabbix-app: zabbix-server
+      state: infra
+  serviceName: "zabbix-server"
+  template:
+    metadata:
+      labels:
+        zabbix-app: zabbix-server
+        state: infra
+    spec:
+#      hostNetwork: true
+      containers:
+        - image: zabbix/zabbix-server-pgsql:ubuntu-6.0-latest
+          name: zabbix-server
+          ports:
+            - containerPort: 10051
+              protocol: TCP
+              name: zabbix-trapper
+          envFrom:
+            - secretRef:
+                name: zabbix-sec
+            - configMapRef:
+                name: zabbix-srv-config
+#      imagePullSecrets:
+#        - name: registry-secret
+      restartPolicy: Always
+
+#### Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: monitoring
+  labels:
+    zabbix-app: zabbix-server
+    state: infra
+  name: zabbix-server
+spec:
+  ports:
+    - port: 10051
+      protocol: TCP
+      targetPort: zabbix-trapper
+      nodePort: 32051
+  selector:
+    zabbix-app: zabbix-server
+    state: infra
+  sessionAffinity: None
+  type: NodePort

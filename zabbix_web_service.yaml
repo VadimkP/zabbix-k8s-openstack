@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  creationTimestamp: null
+  labels:
+    zabbix-app: zabbix-server
+    state: infra
+  name: zabbix-web-service
+spec:
+  selector:
+    matchLabels:
+      zabbix-app: zabbix-server
+      state: infra
+#  serviceName: "zabbix-web-service"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        zabbix-app: zabbix-server
+        state: infra
+    spec:
+#      hostNetwork: true
+      containers:
+        - image: zabbix/zabbix-web-service:ubuntu-6.0-latest
+          name: zabbix-web-service
+          envFrom:
+            - secretRef:
+                name: zabbix-sec
+            - configMapRef:
+                name: zabbix-web-service-config
+          ports:
+            - containerPort: 10053
+          resources: {}
+#      imagePullSecrets:
+#        - name: registry-secret
+      restartPolicy: Always
+
+### Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: monitoring
+  annotations:
+  creationTimestamp: null
+  labels:
+    zabbix-app: zabbix-server
+  name: zabbix-web-service
+spec:
+  ports:
+    - name: "10053"
+      port: 10053
+      targetPort: 10053
+  selector:
+    zabbix-app: zabbix-server
+    state: infra
+status:
+  loadBalancer: {}

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  creationTimestamp: null
+  labels:
+    zabbix-app: zabbix-server
+    state: infra
+  name: zabbix-front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      zabbix-app: zabbix-server
+      state: infra
+#  serviceName: "zabbix-front"
+  template:
+    metadata:
+      labels:
+        zabbix-app: zabbix-server
+        state: infra
+    spec:
+#      hostNetwork: true
+      containers:
+      - envFrom:
+          - secretRef:
+              name: zabbix-sec
+          - configMapRef:
+              name: zabbix-front-config
+
+        image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.0-latest
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - -f
+            - http://localhost:8080
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        name: zabbix-front
+        ports:
+          - containerPort: 8080
+          - containerPort: 8443
+        resources: {}
+#      imagePullSecrets:
+#        - name: registry-secret
+
+### Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: monitoring
+  annotations:
+  creationTimestamp: null
+  labels:
+    zabbix-app: zabbix-server
+    state: infra
+  name: zabbix-front
+spec:
+  ports:
+  - name: "http"
+    port: 8080
+    targetPort: 8080
+  - name: "https"
+    port: 8443
+    targetPort: 8443
+  selector:
+    zabbix-app: zabbix-server
+    state: infra
+status:
+  loadBalancer: {}

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zabbix-web-service-config
+  namespace: monitoring
+
+data:
+  # ZBX_DEBUGLEVEL=3
+  ZBX_ALLOWEDIP: "zabbix-server,zabbix-server-0.monitoring.svc.cluster.local,127.0.0.1"
+  # ZBX_LISTENPORT=10053
+  # ZBX_LISTENIP=
+  # ZBX_TIMEOUT=3
+  # ZBX_TLSACCEPT=unencrypted
+  # ZBX_TLSCAFILE=
+  # ZBX_TLSCERTFILE=
+  # ZBX_TLSKEYFILE=
+  ZBX_IGNOREURLCERTERRORS: "1"
+
